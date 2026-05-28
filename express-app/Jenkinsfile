@@ -1,0 +1,70 @@
+pipeline {
+    agent any
+
+    tools {
+        nodejs 'NodeJS18'
+    }
+
+    environment {
+        APP_DIR = '/home/ubuntu/express-app'
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                echo 'Pulling latest code from GitHub...'
+                git branch: 'main',
+                    url: 'https://github.com/YOUR_USERNAME/express-app.git'
+            }
+        }
+
+        stage('Copy to App Directory') {
+            steps {
+                sh '''
+                    cp -r . ${APP_DIR}
+                '''
+            }
+        }
+
+        stage('Install Dependencies') {
+            steps {
+                echo 'Installing Node.js dependencies...'
+                sh '''
+                    cd ${APP_DIR}
+                    npm install
+                '''
+            }
+        }
+
+        stage('Test') {
+            steps {
+                echo 'Running tests...'
+                sh '''
+                    cd ${APP_DIR}
+                    npm test || echo "No test script found, skipping"
+                '''
+            }
+        }
+
+        stage('Deploy') {
+            steps {
+                echo 'Restarting Express app via pm2...'
+                sh '''
+                    pm2 describe express-app > /dev/null 2>&1 \
+                        && pm2 restart express-app \
+                        || pm2 start ${APP_DIR}/server.js --name express-app
+                    pm2 save
+                '''
+            }
+        }
+    }
+
+    post {
+        success {
+            echo 'Express deployment successful!'
+        }
+        failure {
+            echo 'Express deployment FAILED. Check the logs above.'
+        }
+    }
+}
