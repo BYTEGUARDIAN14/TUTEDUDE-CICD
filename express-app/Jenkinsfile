@@ -1,3 +1,4 @@
+```groovy id="r5k2wn"
 pipeline {
     agent any
 
@@ -6,31 +7,29 @@ pipeline {
     }
 
     environment {
-        APP_DIR = '/home/ubuntu/express-app'
+        APP_DIR = '/home/ubuntu/TUTEDUDE-CICD/express-app'
     }
 
     stages {
+
         stage('Checkout') {
             steps {
-                echo 'Pulling latest code from GitHub...'
-                git branch: 'main',
-                    url: 'https://github.com/YOUR_USERNAME/express-app.git'
-            }
-        }
 
-        stage('Copy to App Directory') {
-            steps {
-                sh '''
-                    cp -r . ${APP_DIR}
-                '''
+                echo 'Pulling latest code from GitHub...'
+
+                git branch: 'main',
+                url: 'https://github.com/BYTEGUARDIAN14/TUTEDUDE-CICD.git'
             }
         }
 
         stage('Install Dependencies') {
             steps {
+
                 echo 'Installing Node.js dependencies...'
+
                 sh '''
                     cd ${APP_DIR}
+
                     npm install
                 '''
             }
@@ -38,21 +37,27 @@ pipeline {
 
         stage('Test') {
             steps {
+
                 echo 'Running tests...'
+
                 sh '''
                     cd ${APP_DIR}
-                    npm test || echo "No test script found, skipping"
+
+                    npm test || echo "No tests found, skipping"
                 '''
             }
         }
 
         stage('Deploy') {
             steps {
-                echo 'Restarting Express app via pm2...'
+
+                echo 'Restarting Express app with PM2...'
+
                 sh '''
-                    pm2 describe express-app > /dev/null 2>&1 \
-                        && pm2 restart express-app \
-                        || pm2 start ${APP_DIR}/server.js --name express-app
+                    pm2 describe express-app > /dev/null 2>&1 && \
+                    pm2 restart express-app || \
+                    pm2 start server.js --name express-app
+
                     pm2 save
                 '''
             }
@@ -60,11 +65,14 @@ pipeline {
     }
 
     post {
+
         success {
             echo 'Express deployment successful!'
         }
+
         failure {
-            echo 'Express deployment FAILED. Check the logs above.'
+            echo 'Express deployment FAILED!'
         }
     }
 }
+```
