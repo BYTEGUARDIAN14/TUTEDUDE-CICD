@@ -1,78 +1,77 @@
-```groovy id="r5k2wn"
 pipeline {
-    agent any
+agent any
 
-    tools {
-        nodejs 'NodeJS18'
-    }
+tools {
+    nodejs 'NodeJS18'
+}
 
-    environment {
-        APP_DIR = '/home/ubuntu/TUTEDUDE-CICD/express-app'
-    }
+environment {
+    APP_DIR = '/home/ubuntu/TUTEDUDE-CICD/express-app'
+}
 
-    stages {
+stages {
 
-        stage('Checkout') {
-            steps {
+    stage('Checkout') {
+        steps {
 
-                echo 'Pulling latest code from GitHub...'
+            echo 'Pulling latest code from GitHub...'
 
-                git branch: 'main',
+            git branch: 'main',
                 url: 'https://github.com/BYTEGUARDIAN14/TUTEDUDE-CICD.git'
-            }
-        }
-
-        stage('Install Dependencies') {
-            steps {
-
-                echo 'Installing Node.js dependencies...'
-
-                sh '''
-                    cd ${APP_DIR}
-
-                    npm install
-                '''
-            }
-        }
-
-        stage('Test') {
-            steps {
-
-                echo 'Running tests...'
-
-                sh '''
-                    cd ${APP_DIR}
-
-                    npm test || echo "No tests found, skipping"
-                '''
-            }
-        }
-
-        stage('Deploy') {
-            steps {
-
-                echo 'Restarting Express app with PM2...'
-
-                sh '''
-                    pm2 describe express-app > /dev/null 2>&1 && \
-                    pm2 restart express-app || \
-                    pm2 start server.js --name express-app
-
-                    pm2 save
-                '''
-            }
         }
     }
 
-    post {
+    stage('Install Dependencies') {
+        steps {
 
-        success {
-            echo 'Express deployment successful!'
+            echo 'Installing Node.js dependencies...'
+
+            sh '''
+                cd ${APP_DIR}
+                npm install
+            '''
         }
+    }
 
-        failure {
-            echo 'Express deployment FAILED!'
+    stage('Test') {
+        steps {
+
+            echo 'Running tests...'
+
+            sh '''
+                cd ${APP_DIR}
+                npm test || echo "No tests found, skipping"
+            '''
+        }
+    }
+
+    stage('Deploy') {
+        steps {
+
+            echo 'Restarting Express app with PM2...'
+
+            sh '''
+                cd ${APP_DIR}
+
+                pm2 describe express-app > /dev/null 2>&1 && \
+                pm2 restart express-app || \
+                pm2 start server.js --name express-app
+
+                pm2 save
+            '''
         }
     }
 }
-```
+
+post {
+
+    success {
+        echo 'Express deployment successful!'
+    }
+
+    failure {
+        echo 'Express deployment FAILED!'
+    }
+}
+
+}
